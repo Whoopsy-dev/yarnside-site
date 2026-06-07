@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+  <title>Yarnside — Showcase (preview)</title>
+  <meta name="robots" content="noindex" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --items: 10;
+      /* Brand palette */
+      --cream: #f6efe6;
+      --terracotta: #d39a63;
+      --muted: rgba(246, 239, 230, 0.55);
+      /* Fan spread — overridden on smaller screens */
+      --spread-x: 800%;
+      --spread-y: 200%;
+      --spread-rot: 120deg;
+      --ease: cubic-bezier(0, 0.02, 0, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      overflow: hidden;
+      font-family: "Nunito Sans", system-ui, sans-serif;
+      color: var(--cream);
+      background:
+        radial-gradient(circle at 25% 15%, #3a2a1f 0%, transparent 60%),
+        linear-gradient(135deg, #241c17, #18120e);
+      cursor: none;
+    }
+    @media (pointer: coarse) { body { cursor: auto; } }
+
+    /*--------------------  Carousel  --------------------*/
+    .carousel {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .carousel-item {
+      --width: clamp(170px, 30vw, 300px);
+      --height: clamp(230px, 42vw, 410px);
+      --x: calc(var(--active) * var(--spread-x));
+      --y: calc(var(--active) * var(--spread-y));
+      --rot: calc(var(--active) * var(--spread-rot));
+      position: absolute;
+      z-index: var(--zIndex);
+      top: 50%;
+      left: 50%;
+      width: var(--width);
+      height: var(--height);
+      margin: calc(var(--height) * -0.5) 0 0 calc(var(--width) * -0.5);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #18120e;
+      box-shadow: 0 10px 50px 10px rgba(0, 0, 0, 0.5);
+      transform-origin: 0% 100%;
+      transform: translate(var(--x), var(--y)) rotate(var(--rot));
+      will-change: transform;
+      user-select: none;
+      pointer-events: all;
+    }
+
+    .carousel-box {
+      position: absolute;
+      inset: 0;
+      opacity: var(--box-opacity, 1);
+    }
+    .carousel-box::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(to bottom,
+        rgba(0,0,0,.35), rgba(0,0,0,0) 28%, rgba(0,0,0,0) 55%, rgba(0,0,0,.6));
+    }
+
+    .carousel-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+
+    .title {
+      position: absolute;
+      z-index: 2;
+      bottom: 18px;
+      left: 20px;
+      right: 20px;
+      font-family: "Fraunces", Georgia, serif;
+      font-weight: 600;
+      font-size: clamp(20px, 3vw, 30px);
+      line-height: 1.1;
+      text-shadow: 0 4px 14px rgba(0, 0, 0, .4);
+      opacity: var(--text-opacity, 0);
+    }
+    .title small {
+      display: block;
+      font-family: "Nunito Sans", sans-serif;
+      font-weight: 400;
+      font-size: 0.46em;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--terracotta);
+      margin-top: 6px;
+    }
+
+    .num {
+      position: absolute;
+      z-index: 2;
+      top: 8px;
+      left: 18px;
+      font-family: "Fraunces", Georgia, serif;
+      font-weight: 400;
+      font-size: clamp(28px, 9vw, 76px);
+      line-height: 1;
+      opacity: var(--text-opacity, 0);
+    }
+
+    /*--------------------  Chrome / UI  --------------------*/
+    .brand {
+      position: fixed;
+      z-index: 5;
+      top: 26px;
+      left: 28px;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 22px;
+      letter-spacing: 0.5px;
+      pointer-events: none;
+    }
+
+    .vbar {
+      position: fixed;
+      z-index: 5;
+      left: 34px;
+      bottom: 28px;
+      transform-origin: 0% 0%;
+      transform: rotate(-90deg);
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .actions {
+      position: fixed;
+      z-index: 6;
+      right: 26px;
+      bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .cta {
+      display: inline-block;
+      padding: 0.7rem 1.4rem;
+      border-radius: 99px;
+      background: var(--terracotta);
+      color: #20160f;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: transform .25s var(--ease), background .25s var(--ease);
+    }
+    .cta:hover { background: #e0ad77; transform: translateY(-2px); }
+    .ig {
+      width: 26px; height: 26px;
+      color: var(--cream);
+      opacity: .65;
+      transition: opacity .25s var(--ease);
+    }
+    .ig:hover { opacity: 1; }
+
+    .hint {
+      position: fixed;
+      z-index: 5;
+      top: 30px;
+      right: 28px;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    /*--------------------  Custom cursor  --------------------*/
+    .cursor {
+      position: fixed;
+      z-index: 20;
+      top: 0; left: 0;
+      --size: 38px;
+      width: var(--size);
+      height: var(--size);
+      margin: calc(var(--size) * -0.5) 0 0 calc(var(--size) * -0.5);
+      border-radius: 50%;
+      border: 1px solid rgba(246, 239, 230, .3);
+      pointer-events: none;
+      transition: transform .85s var(--ease), opacity .3s;
+      display: none;
+    }
+    .cursor2 { --size: 5px; background: var(--cream); border: none; transition-duration: .5s; }
+    @media (pointer: fine) { .cursor { display: block; } }
+
+    /*--------------------  Responsive fan  --------------------*/
+    @media (max-width: 900px) {
+      :root { --spread-x: 620%; --spread-y: 190%; --spread-rot: 100deg; }
+    }
+    @media (max-width: 600px) {
+      :root { --spread-x: 460%; --spread-y: 165%; --spread-rot: 78deg; }
+      .carousel-item { --width: clamp(150px, 52vw, 230px); --height: clamp(210px, 72vw, 320px); }
+      .vbar, .hint { display: none; }
+      .actions { right: 50%; transform: translateX(50%); bottom: 22px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cursor { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="carousel" id="carousel">
+    <!-- Cards injected by JS so it's easy to swap in your real images later -->
+  </main>
+
+  <div class="brand">Yarnside</div>
+  <div class="vbar">Handmade crochet · made with care</div>
+  <div class="hint">Scroll / drag to explore</div>
+
+  <div class="actions">
+    <a class="cta" href="mailto:hello@yarnside.com.au">Get in touch</a>
+    <a class="ig" href="#" aria-label="Instagram" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="3" y="3" width="18" height="18" rx="5"/>
+        <circle cx="12" cy="12" r="4"/>
+        <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/>
+      </svg>
+    </a>
+  </div>
+
+  <div class="cursor"></div>
+  <div class="cursor cursor2"></div>
+
+  <script>
+    /*--------------------  Data (placeholder images — swap later)  --------------------*/
+    const COLLECTION = [
+      { title: "Meadow Throw",     tag: "Blankets" },
+      { title: "Coastal Tote",     tag: "Bags" },
+      { title: "Granny Square",    tag: "Cushions" },
+      { title: "Heirloom Blanket", tag: "Blankets" },
+      { title: "Sunday Cardigan",  tag: "Wearables" },
+      { title: "Little Bear",      tag: "Amigurumi" },
+      { title: "Harvest Basket",   tag: "Homeware" },
+      { title: "Garden Bunting",   tag: "Decor" },
+      { title: "Cosy Beanie",      tag: "Wearables" },
+      { title: "Daisy Coasters",   tag: "Homeware" },
+    ];
+
+    const carousel = document.getElementById("carousel");
+    COLLECTION.forEach((item, i) => {
+      const n = String(i + 1).padStart(2, "0");
+      const el = document.createElement("div");
+      el.className = "carousel-item";
+      el.innerHTML = `
+        <div class="carousel-box">
+          <img src="https://picsum.photos/seed/yarnside${i + 1}/800/1067"
+               alt="${item.title}" loading="lazy" decoding="async" draggable="false" />
+        </div>
+        <div class="num">${n}</div>
+        <div class="title">${item.title}<small>${item.tag}</small></div>`;
+      carousel.appendChild(el);
+    });
+
+    /*--------------------  State  --------------------*/
+    const items = [...document.querySelectorAll(".carousel-item")];
+    const cursors = [...document.querySelectorAll(".cursor")];
+    const N = items.length;
+
+    let progress = 50;        // rendered (eased) value
+    let target = 50;          // input target
+    let startX = 0;
+    let isDown = false;
+    let dragDist = 0;         // how far this press has moved (to tell click from drag)
+
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const EASE = reduceMotion ? 1 : 0.085;   // lerp factor — higher = snappier
+    const SPEED_WHEEL = 0.025;
+    const SPEED_DRAG = -0.12;
+
+    const clamp = (v, a, b) => Math.max(a, Math.min(v, b));
+    const lerp = (a, b, n) => a + (b - a) * n;
+
+    /*--------------------  Render loop  --------------------*/
+    function render() {
+      target = clamp(target, 0, 100);
+      progress = lerp(progress, target, EASE);
+
+      const active = (progress / 100) * (N - 1);   // FLOAT → continuous motion
+      const front = Math.round(active);
+
+      items.forEach((item, index) => {
+        const offset = index - active;             // 0 at centre, ± to sides
+        const dist = Math.abs(offset);
+
+        // position (matches the reference fan, but continuous)
+        item.style.setProperty("--active", offset / N);
+        // stacking: front card on top
+        item.style.setProperty("--zIndex", N - Math.abs(index - front));
+        // image dims out as it leaves centre (~3 cards each side visible)
+        item.style.setProperty("--box-opacity", clamp(1 - (3 * dist) / N, 0, 1));
+        // text only on the centred card → cross-fades while scrolling
+        item.style.setProperty("--text-opacity", clamp(1 - dist, 0, 1));
+      });
+
+      requestAnimationFrame(render);
+    }
+    render();
+
+    /*--------------------  Input → target only  --------------------*/
+    addEventListener("wheel", (e) => { target += e.deltaY * SPEED_WHEEL; }, { passive: true });
+
+    const pointerDown = (e) => { isDown = true; dragDist = 0; startX = e.clientX ?? e.touches?.[0]?.clientX ?? 0; };
+    const pointerUp   = () => { isDown = false; };
+    const pointerMove = (e) => {
+      const x = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+      if (e.clientX != null) cursors.forEach((c) => (c.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`));
+      if (!isDown) return;
+      const dx = x - startX;
+      dragDist += Math.abs(dx);
+      target += dx * SPEED_DRAG;
+      startX = x;
+    };
+
+    addEventListener("mousedown", pointerDown);
+    addEventListener("mousemove", pointerMove);
+    addEventListener("mouseup", pointerUp);
+    addEventListener("touchstart", pointerDown, { passive: true });
+    addEventListener("touchmove", pointerMove, { passive: true });
+    addEventListener("touchend", pointerUp);
+
+    // click a card to bring it to centre (ignored if the press was actually a drag)
+    items.forEach((item, i) => item.addEventListener("click", () => {
+      if (dragDist > 8) return;
+      target = (i / (N - 1)) * 100;
+    }));
+
+    // keyboard
+    addEventListener("keydown", (e) => {
+      const step = 100 / (N - 1);
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") target += step;
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") target -= step;
+    });
+  </script>
+</body>
+</html>
