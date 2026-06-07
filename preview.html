@@ -385,7 +385,10 @@
     const items = [...document.querySelectorAll(".carousel-item")];
     const N = items.length;
 
-    let progress = 50, target = 50, startX = 0, isDown = false, dragDist = 0;
+    // start focused on the second image (index 1)
+    const START_INDEX = 1;
+    const startProgress = (START_INDEX / (N - 1)) * 100;
+    let progress = startProgress, target = startProgress, startX = 0, isDown = false, dragDist = 0;
 
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const EASE = reduceMotion ? 1 : 0.085;
