@@ -28,6 +28,7 @@
       --step-x: 80%;
       --step-y: 20%;
       --step-rot: 12deg;
+      --fade: 4;   /* how quickly off-centre cards dim (lower = faster) */
       --ease: cubic-bezier(0, 0.02, 0, 1);
     }
 
@@ -96,7 +97,11 @@
       cursor: pointer;
     }
 
-    .carousel-box { position: absolute; inset: 0; opacity: var(--box-opacity, 1); }
+    .carousel-box {
+      position: absolute;
+      inset: 0;
+      opacity: clamp(0, calc(1 - var(--dist, 0) / var(--fade)), 1);
+    }
     .carousel-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 
     /*--------------------  Brand wordmark (pen-draws on load)  --------------------*/
@@ -232,7 +237,7 @@
     }
     /* --- MOBILE: vertical stack instead of overlapping fixed layers --- */
     @media (max-width: 600px) {
-      :root { --step-x: 50%; --step-y: 14%; --step-rot: 8deg; }
+      :root { --step-x: 66%; --step-y: 16%; --step-rot: 9deg; --fade: 2.6; }
 
       html, body { height: auto; }
       body {
@@ -411,7 +416,7 @@
         item.style.setProperty("--offset", offset);
         // continuous depth → browser sorts smoothly, no z-index snap
         item.style.setProperty("--z", (-dist * 8).toFixed(2) + "px");
-        item.style.setProperty("--box-opacity", clamp(1 - dist / 4, 0, 1));
+        item.style.setProperty("--dist", dist.toFixed(3));
       });
       setCopy(cardProduct[front]);
       requestAnimationFrame(render);
