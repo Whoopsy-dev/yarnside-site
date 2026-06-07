@@ -503,18 +503,19 @@
     if (!reduceMotion) {
       const wm = document.getElementById("wm");
       const len = wm.getTotalLength();
-      wm.style.fillOpacity = "0";
       wm.style.strokeDasharray = len;
       wm.style.strokeDashoffset = len;
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        wm.style.transition = "stroke-dashoffset 2.4s cubic-bezier(.6,.01,.2,1)";
-        wm.style.strokeDashoffset = "0";
-      }));
-      wm.addEventListener("transitionend", (e) => {
-        if (e.propertyName !== "stroke-dashoffset") return;
-        wm.style.transition = "fill-opacity .7s ease";
-        wm.style.fillOpacity = "1";
-      });
+      wm.style.fillOpacity = "0";
+      // One continuous motion: the pen draws the whole time, and the fill inks in
+      // over the back half — so it never stops between "outline done" and "fill".
+      wm.animate(
+        [
+          { strokeDashoffset: len, fillOpacity: 0, offset: 0 },
+          { fillOpacity: 0, offset: 0.45 },
+          { strokeDashoffset: 0, fillOpacity: 1, offset: 1 },
+        ],
+        { duration: 2200, easing: "cubic-bezier(.4, 0, .25, 1)", fill: "forwards" }
+      );
     }
 
     /*--------------------  Cascade: randomised, fires once on load  --------------------*/
