@@ -113,7 +113,7 @@
     .copy {
       position: fixed;
       z-index: 5;
-      top: 34vh;
+      top: 16vh;
       right: clamp(28px, 6vw, 92px);
       max-width: 370px;
       text-align: right;
@@ -143,25 +143,27 @@
       color: var(--read);
     }
 
-    /*--------------------  Contact block (bottom-left)  --------------------*/
-    .contact {
+    /*--------------------  Brand / values block (bottom-left)  --------------------*/
+    .intro {
       position: fixed;
       z-index: 6;
-      left: clamp(22px, 4vw, 42px);
-      bottom: clamp(22px, 4vw, 36px);
-      max-width: 300px;
+      left: clamp(22px, 4vw, 44px);
+      bottom: clamp(92px, 16vh, 168px);
+      max-width: 332px;
     }
-    .contact-eyebrow {
+    .intro-tag {
       font-family: "Fraunces", Georgia, serif;
+      font-style: italic;
       font-weight: 600;
-      font-size: clamp(19px, 2.2vw, 26px);
-      line-height: 1.1;
-      margin-bottom: 4px;
+      font-size: clamp(20px, 2.4vw, 28px);
+      line-height: 1.15;
+      margin-bottom: 12px;
     }
-    .contact-sub {
-      font-size: 13.5px;
-      color: var(--muted);
-      margin-bottom: 16px;
+    .intro-body {
+      font-size: 14px;
+      line-height: 1.62;
+      color: var(--read);
+      margin-bottom: 18px;
     }
     .actions { display: flex; align-items: center; gap: 18px; }
     .cta {
@@ -191,6 +193,25 @@
       pointer-events: none;
     }
 
+    /* Acknowledgement of Country, bottom-centre */
+    .acknowledge {
+      position: fixed;
+      z-index: 5;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .flag { width: 23px; height: 15px; border-radius: 2px; flex: none; }
+
     /*--------------------  Responsive  --------------------*/
     @media (max-width: 900px) {
       :root { --step-x: 62%; --step-y: 19%; --step-rot: 10deg; }
@@ -204,8 +225,9 @@
       .copy { top: 13vh; right: 20px; max-width: 60vw; }
       .copy-title { font-size: clamp(24px, 7vw, 32px); }
       .copy-desc { font-size: 13px; }
-      .contact { left: 50%; transform: translateX(-50%); bottom: 20px; text-align: center; max-width: 88vw; }
+      .intro { left: 50%; transform: translateX(-50%); bottom: 76px; text-align: center; max-width: 90vw; }
       .actions { justify-content: center; }
+      .acknowledge { font-size: 9px; letter-spacing: .08em; bottom: 16px; white-space: normal; text-align: center; max-width: 92vw; line-height: 1.4; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -228,9 +250,9 @@
     <p class="copy-desc" id="copyDesc"></p>
   </div>
 
-  <div class="contact">
-    <div class="contact-eyebrow">Want to know more?</div>
-    <div class="contact-sub">Every piece is hand-made to order.</div>
+  <div class="intro">
+    <p class="intro-tag">Crochet wears for sapiens.</p>
+    <p class="intro-body">Handmade on Wadawurrung Country by Steph, in small batches and made to order. All profits go to organisations fighting for the Earth and its inhabitants.</p>
     <div class="actions">
       <a class="cta" href="mailto:hello@yarnside.com.au">Get in touch</a>
       <a class="ig" href="#" aria-label="Instagram" target="_blank" rel="noopener">
@@ -241,6 +263,15 @@
         </svg>
       </a>
     </div>
+  </div>
+
+  <div class="acknowledge">
+    <svg class="flag" viewBox="0 0 30 20" role="img" aria-label="Aboriginal flag">
+      <rect width="30" height="10" fill="#000000"/>
+      <rect width="30" height="10" y="10" fill="#CC0000"/>
+      <circle cx="15" cy="10" r="4.3" fill="#FFCD00"/>
+    </svg>
+    <span>Always Was, Always Will Be Aboriginal Land</span>
   </div>
 
   <div class="hint">Scroll / drag to explore</div>
