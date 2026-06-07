@@ -399,6 +399,7 @@
     const EASE = reduceMotion ? 1 : 0.085;
     const SPEED_WHEEL = 0.025;
     const SPEED_DRAG = -0.12;
+    const SPEED_DRAG_TOUCH = -0.085;   // gentler on touch so swipes don't overshoot
 
     const clamp = (v, a, b) => Math.max(a, Math.min(v, b));
     const lerp = (a, b, n) => a + (b - a) * n;
@@ -424,23 +425,50 @@
     render();
 
     /*--------------------  Input → target only  --------------------*/
+    const carouselEl = document.querySelector(".carousel");
+
+    // Wheel / trackpad (desktop)
     addEventListener("wheel", (e) => { target += e.deltaY * SPEED_WHEEL; }, { passive: true });
-    const pointerDown = (e) => { isDown = true; dragDist = 0; startX = e.clientX ?? e.touches?.[0]?.clientX ?? 0; };
-    const pointerUp = () => { isDown = false; };
-    const pointerMove = (e) => {
-      if (!isDown) return;
-      const x = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
-      const dx = x - startX;
+
+    // Mouse drag (desktop)
+    let mouseDown = false, mouseX = 0;
+    addEventListener("mousedown", (e) => { mouseDown = true; dragDist = 0; mouseX = e.clientX; });
+    addEventListener("mousemove", (e) => {
+      if (!mouseDown) return;
+      const dx = e.clientX - mouseX;
       dragDist += Math.abs(dx);
       target += dx * SPEED_DRAG;
-      startX = x;
-    };
-    addEventListener("mousedown", pointerDown);
-    addEventListener("mousemove", pointerMove);
-    addEventListener("mouseup", pointerUp);
-    addEventListener("touchstart", pointerDown, { passive: true });
-    addEventListener("touchmove", pointerMove, { passive: true });
-    addEventListener("touchend", pointerUp);
+      mouseX = e.clientX;
+    });
+    addEventListener("mouseup", () => { mouseDown = false; });
+
+    // Touch (mobile) — axis-locked: a vertical swipe scrolls the page,
+    // a horizontal swipe drives the carousel (and we block page scroll then),
+    // so the two gestures never fight. Only engages if the touch starts on the band.
+    let tStartX = 0, tStartY = 0, tLastX = 0, tAxis = null, tInBand = false;
+    addEventListener("touchstart", (e) => {
+      const t = e.touches[0];
+      const r = carouselEl.getBoundingClientRect();
+      tInBand = t.clientY >= r.top && t.clientY <= r.bottom;
+      tAxis = null; dragDist = 0;
+      tStartX = tLastX = t.clientX;
+      tStartY = t.clientY;
+    }, { passive: true });
+    addEventListener("touchmove", (e) => {
+      if (!tInBand) return;                          // started outside carousel → normal page scroll
+      const t = e.touches[0];
+      if (tAxis === null) {                          // decide direction on first real movement
+        const adx = Math.abs(t.clientX - tStartX), ady = Math.abs(t.clientY - tStartY);
+        if (adx < 7 && ady < 7) return;
+        tAxis = adx > ady ? "x" : "y";
+      }
+      if (tAxis === "y") return;                     // vertical → let the page scroll
+      e.preventDefault();                            // horizontal → commit, no page-scroll fighting
+      const dx = t.clientX - tLastX;
+      dragDist += Math.abs(dx);
+      target += dx * SPEED_DRAG_TOUCH;
+      tLastX = t.clientX;
+    }, { passive: false });
 
     items.forEach((item, i) => item.addEventListener("click", () => {
       if (dragDist > 8) return;
