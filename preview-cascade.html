@@ -231,36 +231,12 @@
     .flag { width: 23px; height: 15px; border-radius: 2px; flex: none; }
 
     /*--------------------  Falling-pieces cascade on load (experiment)  --------------------*/
+    /* Pieces + their motion are generated randomly in JS (see bottom of script). */
     .cascade { position: fixed; inset: 0; z-index: 50; overflow: hidden; pointer-events: none; }
-    .fall { position: absolute; top: 0; opacity: 0; will-change: transform, opacity; }
+    .fall { position: absolute; top: 0; left: 0; opacity: 0; will-change: transform, opacity; }
     .fall img {
       display: block; width: 100%; height: auto; will-change: transform;
       filter: drop-shadow(0 14px 20px rgba(45, 60, 50, 0.20));
-    }
-    /* 8 pieces — animations only run once JS adds .play (reliable immediate start) */
-    .cascade.play .fall:nth-child(1) { left: 6%;  width: 150px; animation: fall 4.6s linear .10s both, fade 4.6s ease .10s both; }
-    .cascade.play .fall:nth-child(2) { left: 20%; width: 96px;  animation: fall 5.2s linear .85s both, fade 5.2s ease .85s both; }
-    .cascade.play .fall:nth-child(3) { left: 33%; width: 176px; animation: fall 4.2s linear .40s both, fade 4.2s ease .40s both; }
-    .cascade.play .fall:nth-child(4) { left: 47%; width: 110px; animation: fall 5.4s linear 1.25s both, fade 5.4s ease 1.25s both; }
-    .cascade.play .fall:nth-child(5) { left: 59%; width: 132px; animation: fall 4.7s linear .60s both, fade 4.7s ease .60s both; }
-    .cascade.play .fall:nth-child(6) { left: 71%; width: 88px;  animation: fall 5.1s linear 1.55s both, fade 5.1s ease 1.55s both; }
-    .cascade.play .fall:nth-child(7) { left: 83%; width: 160px; animation: fall 4.4s linear 1.00s both, fade 4.4s ease 1.00s both; }
-    .cascade.play .fall:nth-child(8) { left: 93%; width: 100px; animation: fall 5.0s linear 1.85s both, fade 5.0s ease 1.85s both; }
-    .fall:nth-child(odd)  img { animation: sway 3.1s ease-in-out infinite alternate; }
-    .fall:nth-child(even) img { animation: sway 3.6s ease-in-out infinite alternate; }
-    .fall:nth-child(3n)   img { animation-duration: 2.8s; }
-    @keyframes fall { from { transform: translateY(-45vh); } to { transform: translateY(132vh); } }
-    @keyframes fade { 0% { opacity: 0; } 12% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
-    @keyframes sway { from { transform: translateX(-14px) rotate(-7deg); } to { transform: translateX(14px) rotate(9deg); } }
-    @media (max-width: 600px) {
-      .cascade.play .fall:nth-child(1) { width: 92px;  left: 4%; }
-      .cascade.play .fall:nth-child(2) { width: 66px;  left: 19%; }
-      .cascade.play .fall:nth-child(3) { width: 108px; left: 32%; }
-      .cascade.play .fall:nth-child(4) { width: 74px;  left: 46%; }
-      .cascade.play .fall:nth-child(5) { width: 88px;  left: 59%; }
-      .cascade.play .fall:nth-child(6) { width: 60px;  left: 71%; }
-      .cascade.play .fall:nth-child(7) { width: 100px; left: 82%; }
-      .cascade.play .fall:nth-child(8) { width: 70px;  left: 92%; }
     }
     @media (prefers-reduced-motion: reduce) { .cascade { display: none; } }
 
@@ -365,17 +341,8 @@
 
   <div class="hint">Scroll / drag to explore</div>
 
-  <!-- falling pieces (plays once on load) -->
-  <div class="cascade" aria-hidden="true">
-    <div class="fall"><img src="assets/cutouts/029-hat-cascade.webp" alt="" /></div>
-    <div class="fall"><img src="assets/cutouts/030-hat-cascade.webp" alt="" /></div>
-    <div class="fall"><img src="assets/cutouts/031-hat-cascade.webp" alt="" /></div>
-    <div class="fall"><img src="assets/cutouts/032-hat-cascade.webp" alt="" /></div>
-    <div class="fall"><img src="assets/cutouts/031-hat-cascade.webp" alt="" /></div>
-    <div class="fall"><img src="assets/cutouts/029-hat-cascade.webp" alt="" /></div>
-    <div class="fall"><img src="assets/cutouts/032-hat-cascade.webp" alt="" /></div>
-    <div class="fall"><img src="assets/cutouts/030-hat-cascade.webp" alt="" /></div>
-  </div>
+  <!-- falling pieces (built + animated randomly by JS; plays once on load) -->
+  <div class="cascade" aria-hidden="true"></div>
 
   <script>
     /*--------------------  Data  --------------------*/
@@ -547,15 +514,62 @@
       });
     }
 
-    /*--------------------  Cascade: fire once, immediately on load  --------------------*/
+    /*--------------------  Cascade: randomised, fires once on load  --------------------*/
     (function () {
       const cascade = document.querySelector(".cascade");
-      if (!cascade) return;
-      const imgs = [...cascade.querySelectorAll("img")];
-      // wait for the cut-outs to decode so they're visible the instant they fall,
-      // then start — explicit JS trigger avoids the browser deferring it to first scroll
-      Promise.all(imgs.map((i) => (i.decode ? i.decode().catch(() => {}) : Promise.resolve())))
-        .then(() => cascade.classList.add("play"));
+      if (!cascade || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      const IMAGES = [
+        "assets/cutouts/029-hat-cascade.webp",
+        "assets/cutouts/030-hat-cascade.webp",
+        "assets/cutouts/031-hat-cascade.webp",
+        "assets/cutouts/032-hat-cascade.webp",
+      ];
+      const COUNT = 8;
+      const mobile = innerWidth <= 600;
+      const rand = (a, b) => a + Math.random() * (b - a);
+      const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+      // build pieces with random size/position/image
+      const els = [];
+      for (let i = 0; i < COUNT; i++) {
+        const wrap = document.createElement("div");
+        wrap.className = "fall";
+        const img = document.createElement("img");
+        img.src = pick(IMAGES);
+        img.alt = "";
+        wrap.appendChild(img);
+        wrap.style.left = rand(1, 90).toFixed(2) + "%";
+        wrap.style.width = (mobile ? rand(56, 118) : rand(78, 188)).toFixed(0) + "px";
+        cascade.appendChild(wrap);
+        els.push(wrap);
+      }
+
+      // give each its own random fall — no two alike, so no diagonal banding
+      const run = () => els.forEach((el) => {
+        const startY = -rand(28, 80);                 // starts at a random height above the fold
+        const endY = 132;
+        const dx1 = rand(-70, 70);                    // drift partway
+        const dx2 = dx1 + rand(-70, 70);              // drift the rest
+        const rotA = rand(-35, 35);
+        const rotB = rotA + rand(-140, 140);          // gentle tumble, random direction
+        const rotMid = (rotA + rotB) / 2 + rand(-25, 25);
+        el.animate(
+          [
+            { transform: `translate(0px, ${startY}vh) rotate(${rotA}deg)`,  opacity: 0, offset: 0 },
+            { opacity: 1, offset: 0.12 },
+            { transform: `translate(${dx1}px, ${(startY + endY) / 2}vh) rotate(${rotMid}deg)`, opacity: 1, offset: 0.5 },
+            { opacity: 1, offset: 0.82 },
+            { transform: `translate(${dx2}px, ${endY}vh) rotate(${rotB}deg)`, opacity: 0, offset: 1 },
+          ],
+          { duration: rand(3800, 6400), delay: rand(0, 1800), easing: "cubic-bezier(.33,.05,.5,1)", fill: "both" }
+        );
+      });
+
+      // wait for the cut-outs to decode so they're visible the instant they fall
+      Promise.all([...cascade.querySelectorAll("img")].map((i) =>
+        i.decode ? i.decode().catch(() => {}) : Promise.resolve()
+      )).then(run);
     })();
   </script>
 </body>
