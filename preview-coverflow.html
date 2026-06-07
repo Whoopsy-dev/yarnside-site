@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+  <title>Yarnside — Showcase · Cover Flow (preview)</title>
+  <meta name="robots" content="noindex" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      /* Brand palette — light, airy sea-glass + warm accents */
+      --bg: #e5efe8;
+      --ink: #3b362e;
+      --muted: rgba(59, 54, 46, 0.62);
+      --read: rgba(59, 54, 46, 0.82);
+      --brand-red: #9f2d27;
+      --brand-red-dark: #7f2420;
+      --terracotta: #c07a4e;
+      --terracotta-dark: #a8663d;
+      /* Per-card fan step — overridden on smaller screens */
+      --step-x: 80%;
+      --step-y: 20%;
+      --step-rot: 12deg;
+      --fade: 4;   /* how quickly off-centre cards dim (lower = faster) */
+      --ease: cubic-bezier(0, 0.02, 0, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      overflow: hidden;
+      font-family: "Nunito Sans", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(120% 110% at 30% 12%, #f1f6f2 0%, transparent 55%),
+        var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Subtle linen-like grain — kills gradient banding + adds handmade tactility */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.05;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /*--------------------  Carousel  --------------------*/
+    .carousel {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      pointer-events: none;
+      perspective: 1300px;
+    }
+    /* preserve-3d so cards sort by continuous depth (translateZ) — no z-index pop */
+    .stage {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+    }
+
+    .carousel-item {
+      --width: clamp(180px, 28vw, 300px);
+      --height: clamp(240px, 40vw, 400px);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: var(--width);
+      height: var(--height);
+      margin: calc(var(--height) * -0.5) 0 0 calc(var(--width) * -0.5);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #e7eee8;
+      box-shadow: 0 24px 50px -18px rgba(45, 60, 50, 0.55);
+      transform-origin: 50% 50%;
+      transform: translateX(var(--tx, 0)) translateZ(var(--tz, 0px)) rotateY(var(--ry, 0deg));
+      will-change: transform;
+      user-select: none;
+      pointer-events: all;
+      cursor: pointer;
+    }
+
+    .carousel-box {
+      position: absolute;
+      inset: 0;
+      opacity: clamp(0, calc(1 - var(--dist, 0) / var(--fade)), 1);
+    }
+    .carousel-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+
+    /*--------------------  Brand wordmark (pen-draws on load)  --------------------*/
+    .brand {
+      position: fixed;
+      z-index: 6;
+      top: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: clamp(230px, 36vw, 460px);
+      pointer-events: none;
+    }
+    .wordmark { display: block; width: 100%; height: auto; overflow: visible; }
+    #wm {
+      fill: var(--brand-red);
+      fill-opacity: 1;
+      stroke: var(--brand-red);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /*--------------------  Per-product copy (mid-right, cross-fades)  --------------------*/
+    .copy {
+      position: fixed;
+      z-index: 5;
+      top: 30%;
+      transform: translateY(-50%);
+      right: clamp(28px, 6vw, 92px);
+      max-width: 400px;
+      text-align: right;
+      opacity: 1;
+      transition: opacity .35s var(--ease);
+      pointer-events: none;
+    }
+    .copy.is-out { opacity: 0; }
+    .copy-kicker {
+      font-size: 11px;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--terracotta-dark);
+      margin-bottom: 10px;
+    }
+    .copy-title {
+      font-family: "Fraunces", Georgia, serif;
+      font-style: italic;
+      font-weight: 600;
+      font-size: clamp(33px, 3.6vw, 48px);
+      line-height: 1.06;
+    }
+    .copy-desc {
+      margin: 18px 0 0 auto;
+      max-width: 380px;
+      font-size: clamp(16px, 1.5vw, 20px);
+      line-height: 1.58;
+      color: var(--read);
+    }
+
+    /*--------------------  Brand / values block (bottom-left)  --------------------*/
+    .intro {
+      position: fixed;
+      z-index: 6;
+      left: clamp(22px, 4vw, 44px);
+      bottom: clamp(92px, 16vh, 168px);
+      max-width: 400px;
+    }
+    .intro-tag {
+      font-family: "Fraunces", Georgia, serif;
+      font-style: italic;
+      font-weight: 600;
+      font-size: clamp(33px, 3.6vw, 48px);
+      line-height: 1.06;
+      margin-bottom: 16px;
+    }
+    .intro-body {
+      max-width: 380px;
+      font-size: clamp(16px, 1.5vw, 20px);
+      line-height: 1.58;
+      color: var(--read);
+      margin-bottom: 20px;
+    }
+    .actions { display: flex; align-items: center; gap: 18px; }
+    .cta {
+      display: inline-block;
+      padding: 0.72rem 1.5rem;
+      border-radius: 99px;
+      background: var(--brand-red);
+      color: #fdf6ee;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: transform .25s var(--ease), background .25s var(--ease);
+    }
+    .cta:hover { background: var(--brand-red-dark); transform: translateY(-2px); }
+    .ig { width: 26px; height: 26px; color: var(--ink); opacity: .6; transition: opacity .25s var(--ease); }
+    .ig:hover { opacity: 1; }
+
+    .hint {
+      position: fixed;
+      z-index: 5;
+      right: clamp(22px, 4vw, 40px);
+      bottom: clamp(22px, 4vw, 34px);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    /* Acknowledgement of Country, bottom-centre */
+    .acknowledge {
+      position: fixed;
+      z-index: 5;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 10.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .flag { width: 23px; height: 15px; border-radius: 2px; flex: none; }
+
+    /*--------------------  Responsive  --------------------*/
+    @media (max-width: 900px) {
+      :root { --step-x: 62%; --step-y: 19%; --step-rot: 10deg; }
+      .copy { max-width: 280px; top: 27%; }
+    }
+    /* --- MOBILE: vertical stack instead of overlapping fixed layers --- */
+    @media (max-width: 600px) {
+      :root { --fade: 4.5; }
+
+      html, body { height: auto; }
+      body {
+        overflow-x: hidden;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        min-height: 100dvh;
+      }
+      body::after { position: fixed; }   /* grain stays put while scrolling */
+
+      /* every block flows in order; relative + z so they sit above the grain */
+      .brand, .copy, .carousel, .intro, .acknowledge {
+        position: relative;
+        z-index: 2;
+        transform: none;
+        left: auto; right: auto; top: auto; bottom: auto;
+      }
+
+      .brand { order: 1; width: clamp(180px, 62vw, 290px); margin: 28px auto 4px; }
+
+      .copy { order: 2; max-width: 88vw; margin: 4px auto 2px; text-align: center; }
+      .copy-desc { margin: 12px auto 0; }
+
+      .carousel { order: 3; height: 50vh; width: 100%; }
+      .carousel-item { --width: clamp(150px, 50vw, 230px); --height: clamp(200px, 66vw, 300px); }
+
+      .intro { order: 4; max-width: 88vw; margin: 16px auto 0; text-align: center; }
+      .intro-body { margin: 16px auto 30px; }
+      .actions { justify-content: center; }
+
+      .acknowledge {
+        order: 5; margin: 34px auto 30px; justify-content: center;
+        white-space: normal; text-align: center; max-width: 92vw; line-height: 1.5;
+        font-size: 9.5px; letter-spacing: .08em;
+      }
+
+      .hint { display: none; }
+
+      /* matched, readable sizes for the stacked copy */
+      .copy-kicker { margin-bottom: 8px; }
+      .copy-title, .intro-tag { font-size: clamp(28px, 8vw, 38px); }
+      .copy-desc, .intro-body { font-size: clamp(15px, 4.2vw, 17px); max-width: 86vw; margin-left: auto; margin-right: auto; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .brand { animation: none; clip-path: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="carousel">
+    <div class="stage" id="stage"></div>
+  </main>
+
+  <div class="brand">
+    <svg class="wordmark" viewBox="-9.1 -142.9 528.5 247.0" role="img" aria-label="Yarnside">
+      <path id="wm" d="M40.04 1.37Q43.46-2.05 46.97-5.62Q50.49-9.18 53.81-13.09Q57.13-16.99 60.01-21.24Q62.89-25.49 65.14-30.27Q65.63-31.35 66.50-31.88Q67.38-32.42 68.46-32.42Q70.12-32.42 71.14-31.25Q72.17-30.08 72.17-28.61Q72.17-27.83 71.88-27.15Q68.85-20.80 64.94-15.53Q61.04-10.25 56.74-5.52Q52.44-0.78 48.05 3.66Q43.65 8.11 39.65 12.60Q39.26 19.34 39.65 26.12Q40.04 32.91 40.04 40.53Q40.04 46.78 39.65 53.03Q39.26 59.28 38.38 64.99Q37.50 70.70 35.99 75.68Q34.47 80.66 32.13 84.33Q29.79 87.99 26.66 90.09Q23.54 92.19 19.34 92.19Q12.40 92.19 8.69 87.40Q4.98 82.62 4.98 74.02Q4.98 69.34 6.01 63.96Q7.03 58.59 8.89 52.88Q10.74 47.17 13.33 41.31Q15.92 35.45 18.95 29.88Q21.97 24.32 25.39 19.29Q28.81 14.26 32.32 10.16Q32.52 5.47 32.76 0.44Q33.01-4.59 33.30-8.89Q30.76-4.39 27-1.66Q23.24 1.07 18.75 1.07Q11.33 1.07 7.13-3.91Q2.93-8.89 2.93-17.58Q2.93-23.93 4.15-29.15Q5.37-34.37 6.79-38.13Q8.20-41.89 9.38-43.90Q10.55-45.90 10.55-45.80Q11.62-47.46 13.57-47.46Q15.23-47.46 16.26-46.34Q17.29-45.21 17.29-43.75Q17.29-42.68 16.70-41.80Q16.80-41.89 15.77-40.19Q14.75-38.48 13.53-35.25Q12.30-32.03 11.28-27.54Q10.25-23.05 10.25-17.68Q10.25-12.30 12.21-9.28Q14.16-6.25 18.55-6.25Q24.12-6.25 28.61-14.50Q33.11-22.75 36.23-38.48Q36.43-39.75 37.40-40.58Q38.38-41.41 39.75-41.41Q41.31-41.41 42.38-40.33Q43.46-39.26 43.46-37.70Q43.46-37.40 43.07-34.23Q42.68-31.05 42.14-25.78Q41.60-20.51 41.02-13.53Q40.43-6.54 40.04 1.37M32.23 22.07Q27.83 28.42 24.17 35.45Q20.51 42.48 17.87 49.41Q15.23 56.35 13.77 62.70Q12.30 69.04 12.30 74.02Q12.30 79.10 13.96 81.98Q15.63 84.86 19.24 84.86Q22.46 84.86 24.95 81.69Q27.44 78.52 29.15 72.66Q30.86 66.80 31.74 58.45Q32.62 50.10 32.62 39.75Q32.62 35.55 32.47 31.25Q32.32 26.95 32.23 22.07M140.63-27.25Q140.23-26.46 139.01-23.97Q137.79-21.48 135.89-18.26Q133.98-15.04 131.45-11.52Q128.91-8.01 125.78-5.08Q122.66-2.15 119.04-0.24Q115.43 1.66 111.43 1.66Q105.76 1.66 101.90-1.95Q98.05-5.57 96.29-11.04Q92.97-5.47 88.38-2.20Q83.79 1.07 79.20 1.07Q75.59 1.07 72.66-0.24Q69.73-1.56 67.68-3.96Q65.63-6.35 64.50-9.57Q63.38-12.79 63.38-16.60Q63.38-24.22 65.97-30.03Q68.55-35.84 72.56-39.75Q76.56-43.65 81.40-45.61Q86.23-47.56 90.72-47.56Q93.75-47.56 96.29-46.73Q98.83-45.90 100.63-44.92Q102.44-43.95 103.42-43.12Q104.39-42.29 104.49-42.19Q105.57-40.92 105.57-39.55Q105.57-38.09 104.49-36.96Q103.42-35.84 101.95-35.84Q100.39-35.84 99.32-36.91Q99.12-37.11 98.44-37.65Q97.75-38.18 96.58-38.77Q95.41-39.36 93.80-39.79Q92.19-40.23 90.14-40.23Q87.11-40.23 83.69-38.87Q80.27-37.50 77.44-34.62Q74.61-31.74 72.71-27.39Q70.80-23.05 70.80-17.09Q70.80-15.23 71.19-13.33Q71.58-11.43 72.56-9.86Q73.54-8.30 75.20-7.32Q76.86-6.35 79.30-6.35Q81.05-6.35 83.35-7.52Q85.64-8.69 87.74-11.13Q89.84-13.57 91.55-17.29Q93.26-21 93.95-26.07Q94.14-27.44 95.21-28.37Q96.29-29.30 97.75-29.30Q99.12-29.30 100.15-28.22Q101.17-27.15 101.27-25.78Q101.37-23.93 101.66-20.56Q101.95-17.19 102.98-13.87Q104-10.55 106.05-8.11Q108.11-5.66 111.72-5.66Q114.06-5.66 116.36-6.93Q118.65-8.20 120.85-10.30Q123.05-12.40 125.05-15.09Q127.05-17.77 128.71-20.51Q130.37-23.24 131.64-25.78Q132.91-28.32 133.79-30.18Q134.28-31.25 135.21-31.84Q136.13-32.42 137.21-32.42Q138.87-32.42 139.89-31.20Q140.92-29.98 140.92-28.61Q140.92-27.93 140.63-27.25M144.14-40.14Q143.75-37.50 143.16-35.21Q142.58-32.91 142.04-31.20Q141.50-29.49 141.11-28.42Q140.72-27.34 140.63-27.25Q139.65-25 137.21-25Q135.84-25 134.67-26.03Q133.50-27.05 133.50-28.61Q133.50-29.20 133.69-29.49Q133.89-29.79 134.28-30.66Q134.67-31.54 135.25-33.59Q135.84-35.64 136.72-39.94Q135.06-39.94 133.30-40.04Q131.54-40.14 130.03-40.72Q128.52-41.31 127.54-42.58Q126.56-43.85 126.56-46.09Q126.56-47.75 127.49-50.59Q128.42-53.42 129.98-56.15Q131.54-58.89 133.50-60.89Q135.45-62.89 137.40-62.89Q139.65-62.89 141.06-61.23Q142.48-59.57 143.26-57.18Q144.04-54.79 144.38-52.15Q144.73-49.51 144.73-47.56Q146.39-47.56 148-47.61Q149.61-47.66 151.07-47.66Q156.64-47.66 159.57-45.21Q162.50-42.77 162.50-37.21Q162.50-34.96 162.21-32.52Q161.91-30.08 161.52-27.49Q161.13-24.90 160.84-22.36Q160.55-19.82 160.55-17.38Q160.55-13.87 161.52-11.57Q162.50-9.28 163.96-7.91Q165.43-6.54 167.09-6.01Q168.75-5.47 170.12-5.47Q174.32-5.47 178.03-8.20Q181.74-10.94 184.86-14.79Q187.99-18.65 190.48-22.95Q192.97-27.25 194.63-30.47Q195.12-31.35 196-31.84Q196.88-32.32 197.85-32.32Q199.61-32.32 200.59-31.20Q201.56-30.08 201.56-28.71Q201.56-27.73 201.17-26.95Q198.93-22.95 195.95-17.92Q192.97-12.89 189.16-8.50Q185.35-4.10 180.62-1.07Q175.88 1.95 170.21 1.95Q166.70 1.95 163.57 0.63Q160.45-0.68 158.15-3.17Q155.86-5.66 154.49-9.33Q153.13-12.99 153.13-17.58Q153.13-22.46 154.10-27.29Q155.08-32.13 155.08-36.52Q155.08-38.38 154.25-39.31Q153.42-40.23 150.59-40.23Q149.22-40.23 147.61-40.23Q146-40.23 144.14-40.14M133.30-47.36L137.60-47.36Q137.60-48.05 137.55-49.17Q137.50-50.29 137.35-51.37Q137.21-52.44 136.96-53.22Q136.72-54 136.43-54Q136.13-54 135.69-53.27Q135.25-52.54 134.77-51.51Q134.28-50.49 133.89-49.32Q133.50-48.14 133.30-47.36M216.21-8.79Q217.77-12.01 219.82-15.87Q221.88-19.73 224.22-23.68Q226.56-27.64 229.15-31.54Q231.74-35.45 234.57-38.96Q237.40-42.38 240.28-43.90Q243.16-45.41 245.70-45.41Q250.78-45.41 253.22-41.70Q255.66-37.99 255.66-32.52Q255.66-31.25 255.52-29.44Q255.37-27.64 255.22-25.59Q255.08-23.54 254.93-21.44Q254.79-19.34 254.79-17.48Q254.79-15.14 255.03-12.99Q255.27-10.84 255.96-9.23Q256.64-7.62 257.91-6.69Q259.18-5.76 261.23-5.76Q264.94-5.76 268.46-8.64Q271.97-11.52 274.95-15.48Q277.93-19.43 280.13-23.54Q282.32-27.64 283.40-30.18Q283.89-31.25 284.81-31.84Q285.74-32.42 286.82-32.42Q288.48-32.42 289.50-31.20Q290.53-29.98 290.53-28.61Q290.53-27.93 290.23-27.25Q289.84-26.46 288.67-24.02Q287.50-21.58 285.60-18.41Q283.69-15.23 281.15-11.67Q278.61-8.11 275.54-5.18Q272.46-2.25 268.90-0.29Q265.33 1.66 261.43 1.66Q257.03 1.66 254.30-0.05Q251.56-1.76 250-4.54Q248.44-7.32 247.90-10.69Q247.36-14.06 247.36-17.48Q247.36-18.95 247.51-20.80Q247.66-22.66 247.90-24.71Q248.14-26.76 248.29-28.81Q248.44-30.86 248.44-32.71Q248.44-35.84 247.46-36.96Q246.48-38.09 245.70-38.09Q244.14-38.09 242.14-36.28Q240.14-34.47 237.94-31.54Q235.74-28.61 233.45-24.95Q231.15-21.29 229.15-17.68Q227.15-14.06 225.44-10.79Q223.73-7.52 222.75-5.37Q220.80-1.27 218.85 0.15Q216.89 1.56 214.84 1.56Q212.01 1.56 210.30-0.15Q208.59-1.86 208.59-4.98Q208.59-5.66 208.79-7.67Q208.98-9.67 209.28-12.45Q209.57-15.23 209.86-18.46Q210.16-21.68 210.45-24.85Q210.74-28.03 210.94-30.76Q211.13-33.50 211.13-35.35Q211.13-37.79 210.94-40.04Q210.74-42.29 210.16-42.77Q209.28-42.48 207.03-39.11Q204.79-35.74 201.27-27.25Q200.78-26.17 199.80-25.59Q198.83-25 197.75-25Q196.09-25 195.12-26.12Q194.14-27.25 194.14-28.71Q194.14-29.39 194.43-30.18Q198.83-40.62 202.69-45.56Q206.54-50.49 210.35-50.49Q212.60-50.49 214.16-49.37Q215.72-48.24 216.65-46.39Q217.58-44.53 218.02-42.29Q218.46-40.04 218.46-37.70Q218.46-35.94 218.21-32.23Q217.97-28.52 217.58-24.27Q217.19-20.02 216.85-15.82Q216.50-11.62 216.21-8.79M294.34-36.13Q293.75-34.57 292.92-32.62Q292.09-30.66 291.02-28.52Q290.14-26.86 289.21-25.93Q288.28-25 286.82-25Q285.16-25 284.18-26.03Q283.20-27.05 283.20-28.42Q283.20-28.91 283.30-29.25Q283.40-29.59 283.79-30.37Q286.33-35.25 287.55-38.92Q288.77-42.58 289.55-46.58Q288.87-48.83 288.57-50.39Q288.28-51.95 288.28-53.61Q288.28-56.84 289.65-58.84Q291.02-60.84 293.46-60.84Q295.70-60.84 297.02-58.89Q298.34-56.93 298.34-54.10Q298.34-52.54 298.05-50.98Q297.75-49.41 297.27-47.07Q299.51-41.50 301.76-37.21Q304-32.91 305.76-29.35Q307.52-25.78 308.64-22.66Q309.77-19.53 309.77-16.41Q309.77-12.30 308.11-8.59Q306.45-4.88 302.64-2.34Q303.13-2.25 303.61-2.25Q304.10-2.25 304.59-2.25Q310.16-2.25 314.84-4.79Q319.53-7.32 323.29-11.38Q327.05-15.43 329.98-20.36Q332.91-25.29 335.06-30.18Q336.04-32.42 337.79-32.42Q339.45-32.42 340.38-31.25Q341.31-30.08 341.31-28.71Q341.31-27.93 341.02-27.25Q339.94-24.61 338.23-21.24Q336.52-17.87 334.13-14.31Q331.74-10.74 328.61-7.32Q325.49-3.91 321.63-1.22Q317.77 1.46 313.18 3.08Q308.59 4.69 303.13 4.69Q296.58 4.69 290.97 2.39Q285.35 0.10 281.84-5.18Q281.25-6.05 281.25-7.03Q281.25-8.50 282.37-9.62Q283.50-10.74 284.96-10.74Q286.52-10.74 287.60-9.67Q287.70-9.47 288.28-9.03Q288.87-8.59 289.70-8.06Q290.53-7.52 291.65-7.13Q292.77-6.74 293.95-6.74Q296.29-6.74 297.90-7.71Q299.51-8.69 300.49-10.11Q301.46-11.52 301.90-13.13Q302.34-14.75 302.34-15.92Q302.34-18.36 301.56-20.80Q300.78-23.24 299.56-25.68Q298.34-28.12 296.92-30.71Q295.51-33.30 294.34-36.13M350.20-76.66Q350.20-72.95 347.61-70.36Q345.02-67.77 341.31-67.77Q337.60-67.77 335.01-70.36Q332.42-72.95 332.42-76.66Q332.42-78.52 333.11-80.13Q333.79-81.74 335.01-82.96Q336.23-84.18 337.84-84.86Q339.45-85.55 341.31-85.55Q343.16-85.55 344.78-84.86Q346.39-84.18 347.61-82.96Q348.83-81.74 349.51-80.13Q350.20-78.52 350.20-76.66M334.38-19.43Q334.38-33.50 336.13-47.46Q336.33-48.83 337.35-49.85Q338.38-50.88 340.04-50.88Q341.50-50.88 342.48-49.76Q343.46-48.63 343.46-47.17Q343.46-46.58 343.21-43.65Q342.97-40.72 342.63-36.67Q342.29-32.62 342.04-28.08Q341.80-23.54 341.80-19.73Q341.80-14.55 342.82-11.38Q343.85-8.20 345.46-6.45Q347.07-4.69 348.88-4.10Q350.68-3.52 352.34-3.52Q355.08-3.52 358.01-5.47Q360.94-7.42 364.01-10.94Q367.09-14.45 370.21-19.38Q373.34-24.32 376.37-30.37Q376.86-31.35 377.73-31.88Q378.61-32.42 379.69-32.42Q381.25-32.42 382.28-31.25Q383.30-30.08 383.30-28.71Q383.30-27.73 382.91-27.05Q381.74-24.80 379.98-21.58Q378.22-18.36 375.98-14.94Q373.73-11.52 371.04-8.15Q368.36-4.79 365.33-2.10Q362.30 0.59 358.98 2.25Q355.66 3.91 352.25 3.91Q347.85 3.91 344.53 2.05Q341.21 0.20 338.92-2.93Q336.62-6.05 335.50-10.30Q334.38-14.55 334.38-19.43M344.73-76.66Q344.73-78.03 343.70-79.05Q342.68-80.08 341.31-80.08Q339.94-80.08 338.96-79.05Q337.99-78.03 337.99-76.66Q337.99-75.29 338.96-74.32Q339.94-73.34 341.31-73.34Q342.68-73.34 343.70-74.32Q344.73-75.29 344.73-76.66M414.16-28.42Q418.95-5.86 428.03-5.86Q431.54-5.86 434.77-8.45Q437.99-11.04 440.77-14.79Q443.55-18.55 445.70-22.75Q447.85-26.95 449.22-30.08Q450.20-32.42 452.64-32.42Q454.20-32.42 455.27-31.25Q456.35-30.08 456.35-28.71Q456.35-27.93 456.05-27.34Q455.37-25.68 454.05-22.90Q452.73-20.12 450.83-16.94Q448.93-13.77 446.58-10.45Q444.24-7.13 441.41-4.49Q438.57-1.86 435.40-0.15Q432.23 1.56 428.71 1.56Q422.17 1.56 417.48-2.98Q412.79-7.52 409.38-17.97Q404.69-8.01 399.90-3.52Q395.12 0.98 389.55 0.98Q386.62 0.98 383.89 0.05Q381.15-0.88 379.10-3.03Q377.05-5.18 375.78-8.54Q374.51-11.91 374.51-16.80Q374.51-23.54 376.86-29.20Q379.20-34.86 382.91-38.92Q386.62-42.97 391.16-45.21Q395.70-47.46 400.20-47.46Q401.66-47.46 402.73-46.44Q403.81-45.41 403.81-43.85Q403.81-42.48 402.93-41.41Q402.05-40.33 400.59-40.14Q397.66-39.75 394.34-38.28Q391.02-36.82 388.23-34.03Q385.45-31.25 383.64-26.95Q381.84-22.66 381.84-16.70Q381.84-11.82 383.84-9.08Q385.84-6.35 389.65-6.35Q391.21-6.35 392.97-7.18Q394.73-8.01 396.73-10.45Q398.73-12.89 401.12-17.38Q403.52-21.87 406.45-29.20Q404.79-37.79 403.42-49.02Q402.05-60.25 402.05-74.12Q402.05-80.18 402.44-86.77Q402.83-93.36 403.71-99.66Q404.59-105.96 406.05-111.62Q407.52-117.29 409.62-121.58Q411.72-125.88 414.55-128.37Q417.38-130.86 421-130.86Q424.22-130.86 426.46-129.10Q428.71-127.34 430.13-124.22Q431.54-121.09 432.23-116.70Q432.91-112.30 432.91-107.03Q432.91-95.70 430.96-84.37Q429-73.05 426.12-62.70Q423.24-52.34 420.02-43.55Q416.80-34.77 414.16-28.42M425.59-107.13Q425.59-109.57 425.44-112.40Q425.29-115.23 424.76-117.72Q424.22-120.21 423.34-121.87Q422.46-123.54 421-123.54Q418.55-123.54 416.46-119.24Q414.36-114.94 412.79-107.96Q411.23-100.98 410.30-92.14Q409.38-83.30 409.38-74.32Q409.38-65.72 410.06-57.13Q410.74-48.54 411.62-41.80Q414.45-49.32 416.99-57.28Q419.53-65.23 421.44-73.54Q423.34-81.84 424.46-90.28Q425.59-98.73 425.59-107.13M461.04-10.74Q463.09-7.91 466.31-6.20Q469.53-4.49 474.22-4.49Q479-4.49 482.91-6.79Q486.82-9.08 490.04-12.79Q493.26-16.50 495.80-21.09Q498.34-25.68 500.39-30.27Q500.88-31.35 501.76-31.88Q502.64-32.42 503.71-32.42Q505.37-32.42 506.40-31.25Q507.42-30.08 507.42-28.71Q507.42-28.22 507.32-27.88Q507.23-27.54 507.03-27.15Q500.29-12.30 492.33-4.79Q484.38 2.73 474.32 2.93Q467.87 2.93 463.18 0.44Q458.50-2.05 455.47-6.01Q452.44-9.96 450.98-14.94Q449.51-19.92 449.51-24.90Q449.51-29.88 450.73-34.08Q451.95-38.28 454.25-41.41Q456.54-44.53 459.72-46.29Q462.89-48.05 466.70-48.05Q468.95-48.05 471.14-47.12Q473.34-46.19 475.10-44.48Q476.86-42.77 477.93-40.33Q479-37.89 479-34.77Q479-30.76 477.64-27.25Q476.27-23.73 473.88-20.70Q471.48-17.68 468.16-15.14Q464.84-12.60 461.04-10.74M458.11-17.09Q461.13-18.36 463.62-20.31Q466.11-22.27 467.87-24.61Q469.63-26.95 470.61-29.54Q471.58-32.13 471.58-34.77Q471.58-37.70 470.12-39.21Q468.65-40.72 466.70-40.72Q464.06-40.72 462.21-39.26Q460.35-37.79 459.18-35.45Q458.01-33.11 457.47-30.22Q456.93-27.34 456.93-24.51Q456.93-22.75 457.28-20.80Q457.62-18.85 458.11-17.09Z" />
+    </svg>
+  </div>
+
+  <div class="copy" id="copy">
+    <div class="copy-kicker" id="copyKicker"></div>
+    <h2 class="copy-title" id="copyTitle"></h2>
+    <p class="copy-desc" id="copyDesc"></p>
+  </div>
+
+  <div class="intro">
+    <p class="intro-tag">Crochet wears for sapiens.</p>
+    <p class="intro-body">Handmade on Wadawurrung Country by Steph, in small batches and made to order. All profits go to organisations fighting for the Earth and its inhabitants.</p>
+    <div class="actions">
+      <a class="cta" href="mailto:hello@yarnside.com.au">Get in touch</a>
+      <a class="ig" href="#" aria-label="Instagram" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="3" y="3" width="18" height="18" rx="5"/>
+          <circle cx="12" cy="12" r="4"/>
+          <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+  <div class="acknowledge">
+    <svg class="flag" viewBox="0 0 30 20" role="img" aria-label="Aboriginal flag">
+      <rect width="30" height="10" fill="#000000"/>
+      <rect width="30" height="10" y="10" fill="#CC0000"/>
+      <circle cx="15" cy="10" r="4.3" fill="#FFCD00"/>
+    </svg>
+    <span>Always Was, Always Will Be Aboriginal Land</span>
+  </div>
+
+  <div class="hint">Scroll / drag to explore</div>
+
+  <script>
+    /*--------------------  Data  --------------------*/
+    const PRODUCTS = [
+      {
+        slug: "bucket", kicker: "Headwear", title: "Bucket's", start: 1, count: 10,
+        desc: "Hand-crocheted bucket hats in coastal colourways. Structured enough to hold their shape, soft enough to roll into your beach bag.",
+      },
+      {
+        slug: "beanie", kicker: "Headwear", title: "Beanie's", start: 11, count: 9,
+        desc: "Snug, richly textured beanies for cold starts and windy headlands. Made in small batches, so no two are ever quite the same.",
+      },
+      {
+        slug: "placemat", kicker: "Homeware", title: "Placemat's", start: 20, count: 3,
+        desc: "Chunky crocheted placemats that bring a little handmade warmth to the table, in natural tones that sit with anything.",
+      },
+      {
+        slug: "coaster", kicker: "Homeware", title: "Coaster's", start: 23, count: 6,
+        desc: "Tactile, round coasters with plenty of character. A small handmade touch for the everyday surfaces around your home.",
+      },
+    ];
+
+    const pad3 = (n) => String(n).padStart(3, "0");
+
+    const carousel = document.getElementById("stage");
+    const cardProduct = [];
+    PRODUCTS.forEach((p) => {
+      for (let i = 0; i < p.count; i++) {
+        const file = `assets/images/${pad3(p.start + i)}-${p.slug}.webp`;
+        const el = document.createElement("div");
+        el.className = "carousel-item";
+        el.innerHTML = `<div class="carousel-box"><img src="${file}" alt="${p.title}" loading="lazy" decoding="async" draggable="false" /></div>`;
+        carousel.appendChild(el);
+        cardProduct.push(p);
+      }
+    });
+
+    /*--------------------  Copy panel (per-product cross-fade)  --------------------*/
+    const copyEl = document.getElementById("copy");
+    const copyKicker = document.getElementById("copyKicker");
+    const copyTitle = document.getElementById("copyTitle");
+    const copyDesc = document.getElementById("copyDesc");
+
+    let activeProduct = null;
+    let copyTimer = null;
+    const paintCopy = (p) => { copyKicker.textContent = p.kicker; copyTitle.textContent = p.title; copyDesc.textContent = p.desc; };
+    const setCopy = (p) => {
+      if (!p || p.slug === activeProduct) return;
+      const first = activeProduct === null;
+      activeProduct = p.slug;
+      if (first) { paintCopy(p); return; }
+      copyEl.classList.add("is-out");
+      clearTimeout(copyTimer);
+      copyTimer = setTimeout(() => { paintCopy(p); copyEl.classList.remove("is-out"); }, 350);
+    };
+
+    /*--------------------  State  --------------------*/
+    const items = [...document.querySelectorAll(".carousel-item")];
+    const N = items.length;
+
+    // start focused on the second image (index 1)
+    const START_INDEX = 1;
+    const startProgress = (START_INDEX / (N - 1)) * 100;
+    let progress = startProgress, target = startProgress, startX = 0, isDown = false, dragDist = 0;
+
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const EASE = reduceMotion ? 1 : 0.085;
+    const SPEED_WHEEL = 0.025;
+    const SPEED_DRAG = -0.12;
+
+    const clamp = (v, a, b) => Math.max(a, Math.min(v, b));
+    const lerp = (a, b, n) => a + (b - a) * n;
+
+    setCopy(cardProduct[Math.round((progress / 100) * (N - 1))]);
+
+    function render() {
+      target = clamp(target, 0, 100);
+      progress = lerp(progress, target, EASE);
+      const active = (progress / 100) * (N - 1);
+      const front = clamp(Math.round(active), 0, N - 1);
+      items.forEach((item, index) => {
+        const offset = index - active;
+        const abs = Math.abs(offset);
+        const sign = offset < 0 ? -1 : (offset > 0 ? 1 : 0);
+        const c = Math.min(abs, 1);                 // ramps 0->1 across the first neighbour
+
+        // Cover Flow: centre card flat & forward; side cards angled & receded.
+        // Because each card sits at a different depth + angle in true 3D, the
+        // browser occludes them per-pixel as they pass — no whole-plane swap.
+        const ANGLE = 52, NEAR = 0.5, PILE = 0.16, FWD = 150, BACK = 70;
+        const ry = -sign * c * ANGLE;
+        const txFrac = abs <= 1 ? offset * NEAR : sign * (NEAR + (abs - 1) * PILE);
+        const tz = abs <= 1 ? (FWD - abs * (FWD + BACK)) : (-BACK - (abs - 1) * 30);
+
+        item.style.setProperty("--ry", ry.toFixed(2) + "deg");
+        item.style.setProperty("--tx", (txFrac * 100).toFixed(2) + "%");
+        item.style.setProperty("--tz", tz.toFixed(2) + "px");
+        item.style.setProperty("--dist", abs.toFixed(3));
+      });
+      setCopy(cardProduct[front]);
+      requestAnimationFrame(render);
+    }
+    render();
+
+    /*--------------------  Input → target only  --------------------*/
+    addEventListener("wheel", (e) => { target += e.deltaY * SPEED_WHEEL; }, { passive: true });
+    const pointerDown = (e) => { isDown = true; dragDist = 0; startX = e.clientX ?? e.touches?.[0]?.clientX ?? 0; };
+    const pointerUp = () => { isDown = false; };
+    const pointerMove = (e) => {
+      if (!isDown) return;
+      const x = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+      const dx = x - startX;
+      dragDist += Math.abs(dx);
+      target += dx * SPEED_DRAG;
+      startX = x;
+    };
+    addEventListener("mousedown", pointerDown);
+    addEventListener("mousemove", pointerMove);
+    addEventListener("mouseup", pointerUp);
+    addEventListener("touchstart", pointerDown, { passive: true });
+    addEventListener("touchmove", pointerMove, { passive: true });
+    addEventListener("touchend", pointerUp);
+
+    items.forEach((item, i) => item.addEventListener("click", () => {
+      if (dragDist > 8) return;
+      target = (i / (N - 1)) * 100;
+    }));
+
+    addEventListener("keydown", (e) => {
+      const step = 100 / (N - 1);
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") target += step;
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") target -= step;
+    });
+
+    /*--------------------  Wordmark pen-draw on load  --------------------*/
+    // Default state shows the solid wordmark (no-JS / reduced-motion safe).
+    // With motion allowed: hide the fill, trace the outline, then fill in.
+    if (!reduceMotion) {
+      const wm = document.getElementById("wm");
+      const len = wm.getTotalLength();
+      wm.style.fillOpacity = "0";
+      wm.style.strokeDasharray = len;
+      wm.style.strokeDashoffset = len;
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        wm.style.transition = "stroke-dashoffset 2.4s cubic-bezier(.6,.01,.2,1)";
+        wm.style.strokeDashoffset = "0";
+      }));
+      wm.addEventListener("transitionend", (e) => {
+        if (e.propertyName !== "stroke-dashoffset") return;
+        wm.style.transition = "fill-opacity .7s ease";
+        wm.style.fillOpacity = "1";
+      });
+    }
+  </script>
+</body>
+</html>
