@@ -21,6 +21,7 @@
       --muted: rgba(59, 54, 46, 0.62);
       --read: rgba(59, 54, 46, 0.82);
       --brand-red: #9f2d27;
+      --brand-red-dark: #7f2420;
       --terracotta: #c07a4e;
       --terracotta-dark: #a8663d;
       /* Per-card fan step — overridden on smaller screens */
@@ -62,6 +63,13 @@
       height: 100dvh;
       overflow: hidden;
       pointer-events: none;
+      perspective: 1600px;
+    }
+    /* preserve-3d so cards sort by continuous depth (translateZ) — no z-index pop */
+    .stage {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
     }
 
     .carousel-item {
@@ -71,7 +79,6 @@
       --y: calc(var(--offset) * var(--step-y));
       --rot: calc(var(--offset) * var(--step-rot));
       position: absolute;
-      z-index: var(--zIndex);
       top: 50%;
       left: 50%;
       width: var(--width);
@@ -82,7 +89,7 @@
       background: #e7eee8;
       box-shadow: 0 18px 45px -15px rgba(45, 60, 50, 0.45);
       transform-origin: 0% 100%;
-      transform: translate(var(--x), var(--y)) rotate(var(--rot));
+      transform: translate(var(--x), var(--y)) rotate(var(--rot)) translateZ(var(--z, 0px));
       will-change: transform;
       user-select: none;
       pointer-events: all;
@@ -176,14 +183,14 @@
       display: inline-block;
       padding: 0.72rem 1.5rem;
       border-radius: 99px;
-      background: var(--terracotta);
+      background: var(--brand-red);
       color: #fdf6ee;
       font-weight: 600;
       font-size: 0.9rem;
       text-decoration: none;
       transition: transform .25s var(--ease), background .25s var(--ease);
     }
-    .cta:hover { background: var(--terracotta-dark); transform: translateY(-2px); }
+    .cta:hover { background: var(--brand-red-dark); transform: translateY(-2px); }
     .ig { width: 26px; height: 26px; color: var(--ink); opacity: .6; transition: opacity .25s var(--ease); }
     .ig:hover { opacity: 1; }
 
@@ -223,17 +230,52 @@
       :root { --step-x: 62%; --step-y: 19%; --step-rot: 10deg; }
       .copy { max-width: 280px; top: 27%; }
     }
+    /* --- MOBILE: vertical stack instead of overlapping fixed layers --- */
     @media (max-width: 600px) {
-      :root { --step-x: 46%; --step-y: 16.5%; --step-rot: 7.8deg; }
-      .carousel-item { --width: clamp(160px, 52vw, 240px); --height: clamp(220px, 72vw, 330px); }
-      .hint { display: none; }
-      .brand { top: 14px; width: clamp(180px, 62vw, 300px); }
-      .copy { top: 12vh; right: 20px; max-width: 60vw; transform: none; }
-      .copy-title { font-size: clamp(24px, 7vw, 32px); }
-      .copy-desc { font-size: 13px; }
-      .intro { left: 50%; transform: translateX(-50%); bottom: 76px; text-align: center; max-width: 90vw; }
+      :root { --step-x: 50%; --step-y: 14%; --step-rot: 8deg; }
+
+      html, body { height: auto; }
+      body {
+        overflow-x: hidden;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        min-height: 100dvh;
+      }
+      body::after { position: fixed; }   /* grain stays put while scrolling */
+
+      /* every block flows in order; relative + z so they sit above the grain */
+      .brand, .copy, .carousel, .intro, .acknowledge {
+        position: relative;
+        z-index: 2;
+        transform: none;
+        left: auto; right: auto; top: auto; bottom: auto;
+      }
+
+      .brand { order: 1; width: clamp(180px, 62vw, 290px); margin: 28px auto 4px; }
+
+      .copy { order: 2; max-width: 88vw; margin: 4px auto 2px; text-align: center; }
+      .copy-desc { margin: 12px auto 0; }
+
+      .carousel { order: 3; height: 50vh; width: 100%; }
+      .carousel-item { --width: clamp(150px, 50vw, 230px); --height: clamp(200px, 66vw, 300px); }
+
+      .intro { order: 4; max-width: 88vw; margin: 10px auto 0; text-align: center; }
+      .intro-body { margin: 12px auto 18px; }
       .actions { justify-content: center; }
-      .acknowledge { font-size: 9px; letter-spacing: .08em; bottom: 16px; white-space: normal; text-align: center; max-width: 92vw; line-height: 1.4; }
+
+      .acknowledge {
+        order: 5; margin: 16px auto 24px; justify-content: center;
+        white-space: normal; text-align: center; max-width: 92vw; line-height: 1.5;
+        font-size: 9.5px; letter-spacing: .08em;
+      }
+
+      .hint { display: none; }
+
+      /* matched, readable sizes for the stacked copy */
+      .copy-kicker { margin-bottom: 8px; }
+      .copy-title, .intro-tag { font-size: clamp(28px, 8vw, 38px); }
+      .copy-desc, .intro-body { font-size: clamp(15px, 4.2vw, 17px); max-width: 86vw; margin-left: auto; margin-right: auto; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -242,7 +284,9 @@
   </style>
 </head>
 <body>
-  <main class="carousel" id="carousel"></main>
+  <main class="carousel">
+    <div class="stage" id="stage"></div>
+  </main>
 
   <div class="brand">
     <svg class="wordmark" viewBox="-9.1 -142.9 528.5 247.0" role="img" aria-label="Yarnside">
@@ -305,7 +349,7 @@
 
     const pad3 = (n) => String(n).padStart(3, "0");
 
-    const carousel = document.getElementById("carousel");
+    const carousel = document.getElementById("stage");
     const cardProduct = [];
     PRODUCTS.forEach((p) => {
       for (let i = 0; i < p.count; i++) {
@@ -362,7 +406,8 @@
         const offset = index - active;
         const dist = Math.abs(offset);
         item.style.setProperty("--offset", offset);
-        item.style.setProperty("--zIndex", N - Math.abs(index - front));
+        // continuous depth → browser sorts smoothly, no z-index snap
+        item.style.setProperty("--z", (-dist * 8).toFixed(2) + "px");
         item.style.setProperty("--box-opacity", clamp(1 - dist / 4, 0, 1));
       });
       setCopy(cardProduct[front]);
