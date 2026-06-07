@@ -230,6 +230,16 @@
     }
     .flag { width: 23px; height: 15px; border-radius: 2px; flex: none; }
 
+    /*--------------------  Falling-pieces cascade on load (experiment)  --------------------*/
+    /* Pieces + their motion are generated randomly in JS (see bottom of script). */
+    .cascade { position: fixed; inset: 0; z-index: 50; overflow: hidden; pointer-events: none; }
+    .fall { position: absolute; top: 0; left: 0; opacity: 0; will-change: transform, opacity; }
+    .fall img {
+      display: block; width: 100%; height: auto; will-change: transform;
+      filter: drop-shadow(0 14px 20px rgba(45, 60, 50, 0.20));
+    }
+    @media (prefers-reduced-motion: reduce) { .cascade { display: none; } }
+
     /*--------------------  Responsive  --------------------*/
     @media (max-width: 900px) {
       :root { --step-x: 62%; --step-y: 19%; --step-rot: 10deg; }
@@ -331,23 +341,29 @@
 
   <div class="hint">Scroll / drag to explore</div>
 
+  <!-- falling pieces (built + animated randomly by JS; plays once on load) -->
+  <div class="cascade" aria-hidden="true"></div>
+
   <script>
     /*--------------------  Data  --------------------*/
+    const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+
+    // `nums` = the image numbers to show for each product (drop any you don't want)
     const PRODUCTS = [
       {
-        slug: "bucket", kicker: "Headwear", title: "Bucket's", start: 1, count: 10,
+        slug: "bucket", kicker: "Headwear", title: "Bucket's", nums: [1, 2, 5, 6, 7, 8, 9, 10],
         desc: "Hand-crocheted bucket hats in coastal colourways. Structured enough to hold their shape, soft enough to roll into your beach bag.",
       },
       {
-        slug: "beanie", kicker: "Headwear", title: "Beanie's", start: 11, count: 9,
+        slug: "beanie", kicker: "Headwear", title: "Beanie's", nums: range(11, 19),
         desc: "Snug, richly textured beanies for cold starts and windy headlands. Made in small batches, so no two are ever quite the same.",
       },
       {
-        slug: "placemat", kicker: "Homeware", title: "Placemat's", start: 20, count: 3,
+        slug: "placemat", kicker: "Homeware", title: "Placemat's", nums: range(20, 22),
         desc: "Chunky crocheted placemats that bring a little handmade warmth to the table, in natural tones that sit with anything.",
       },
       {
-        slug: "coaster", kicker: "Homeware", title: "Coaster's", start: 23, count: 6,
+        slug: "coaster", kicker: "Homeware", title: "Coaster's", nums: range(23, 28),
         desc: "Tactile, round coasters with plenty of character. A small handmade touch for the everyday surfaces around your home.",
       },
     ];
@@ -357,14 +373,14 @@
     const carousel = document.getElementById("stage");
     const cardProduct = [];
     PRODUCTS.forEach((p) => {
-      for (let i = 0; i < p.count; i++) {
-        const file = `assets/images/${pad3(p.start + i)}-${p.slug}.webp`;
+      p.nums.forEach((n) => {
+        const file = `assets/images/${pad3(n)}-${p.slug}.webp`;
         const el = document.createElement("div");
         el.className = "carousel-item";
         el.innerHTML = `<div class="carousel-box"><img src="${file}" alt="${p.title}" loading="lazy" decoding="async" draggable="false" /></div>`;
         carousel.appendChild(el);
         cardProduct.push(p);
-      }
+      });
     });
 
     /*--------------------  Copy panel (per-product cross-fade)  --------------------*/
@@ -500,6 +516,64 @@
         wm.style.fillOpacity = "1";
       });
     }
+
+    /*--------------------  Cascade: randomised, fires once on load  --------------------*/
+    (function () {
+      const cascade = document.querySelector(".cascade");
+      if (!cascade || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      const IMAGES = [
+        "assets/cutouts/029-hat-cascade.webp",
+        "assets/cutouts/030-hat-cascade.webp",
+        "assets/cutouts/031-hat-cascade.webp",
+        "assets/cutouts/032-hat-cascade.webp",
+      ];
+      const COUNT = 8;
+      const mobile = innerWidth <= 600;
+      const rand = (a, b) => a + Math.random() * (b - a);
+      const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+      // build pieces with random size/position/image
+      const els = [];
+      for (let i = 0; i < COUNT; i++) {
+        const wrap = document.createElement("div");
+        wrap.className = "fall";
+        const img = document.createElement("img");
+        img.src = pick(IMAGES);
+        img.alt = "";
+        wrap.appendChild(img);
+        wrap.style.left = rand(1, 90).toFixed(2) + "%";
+        wrap.style.width = (mobile ? rand(56, 118) : rand(78, 188)).toFixed(0) + "px";
+        cascade.appendChild(wrap);
+        els.push(wrap);
+      }
+
+      // give each its own random fall — no two alike, so no diagonal banding
+      const run = () => els.forEach((el) => {
+        const startY = -rand(28, 80);                 // starts at a random height above the fold
+        const endY = 132;
+        const dx1 = rand(-70, 70);                    // drift partway
+        const dx2 = dx1 + rand(-70, 70);              // drift the rest
+        const rotA = rand(-35, 35);
+        const rotB = rotA + rand(-140, 140);          // gentle tumble, random direction
+        const rotMid = (rotA + rotB) / 2 + rand(-25, 25);
+        el.animate(
+          [
+            { transform: `translate(0px, ${startY}vh) rotate(${rotA}deg)`,  opacity: 0, offset: 0 },
+            { opacity: 1, offset: 0.12 },
+            { transform: `translate(${dx1}px, ${(startY + endY) / 2}vh) rotate(${rotMid}deg)`, opacity: 1, offset: 0.5 },
+            { opacity: 1, offset: 0.82 },
+            { transform: `translate(${dx2}px, ${endY}vh) rotate(${rotB}deg)`, opacity: 0, offset: 1 },
+          ],
+          { duration: rand(3800, 6400), delay: rand(0, 1800), easing: "cubic-bezier(.33,.05,.5,1)", fill: "both" }
+        );
+      });
+
+      // wait for the cut-outs to decode so they're visible the instant they fall
+      Promise.all([...cascade.querySelectorAll("img")].map((i) =>
+        i.decode ? i.decode().catch(() => {}) : Promise.resolve()
+      )).then(run);
+    })();
   </script>
 </body>
 </html>
