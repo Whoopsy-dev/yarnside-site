@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yarnside — Handmade Crochet</title>
+  <meta name="description" content="Yarnside — handmade crochet. Our new site is on its way." />
+  <meta name="robots" content="noindex" />
+
+  <!-- Social preview -->
+  <meta property="og:title" content="Yarnside — Handmade Crochet" />
+  <meta property="og:description" content="Our new site is on its way. Get in touch." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://yarnside.com.au" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #f6efe6;
+      --ink: #4a3b32;
+      --muted: #8a7866;
+      --accent: #c08552;
+      --accent-dark: #a36b3d;
+      --card: #fffaf3;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: "Nunito Sans", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 20%, #fbf4ea 0%, transparent 55%),
+        radial-gradient(circle at 80% 80%, #f1e4d3 0%, transparent 55%),
+        var(--bg);
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid #ecdcc8;
+      border-radius: 24px;
+      box-shadow: 0 24px 60px -28px rgba(74, 59, 50, 0.35);
+      padding: clamp(2.5rem, 6vw, 4.5rem);
+      max-width: 560px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .mark {
+      font-size: 2.25rem;
+      line-height: 1;
+      margin-bottom: 1.75rem;
+    }
+
+    h1 {
+      font-family: "Fraunces", Georgia, serif;
+      font-weight: 600;
+      font-size: clamp(2.4rem, 7vw, 3.6rem);
+      letter-spacing: -0.5px;
+      margin-bottom: 0.4rem;
+    }
+
+    .tagline {
+      color: var(--accent-dark);
+      font-family: "Fraunces", Georgia, serif;
+      font-weight: 400;
+      font-style: italic;
+      font-size: clamp(1.05rem, 3vw, 1.3rem);
+      margin-bottom: 1.75rem;
+    }
+
+    .divider {
+      width: 56px;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 99px;
+      margin: 0 auto 1.75rem;
+      opacity: 0.5;
+    }
+
+    p.body {
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+      margin-bottom: 2.25rem;
+    }
+
+    .cta {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 0.85rem 1.9rem;
+      border-radius: 99px;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .cta:hover { background: var(--accent-dark); transform: translateY(-1px); }
+
+    footer {
+      margin-top: 2.5rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      letter-spacing: 0.3px;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="mark" aria-hidden="true">🧶</div>
+    <h1>Yarnside</h1>
+    <p class="tagline">Handmade crochet, made with care.</p>
+    <div class="divider"></div>
+    <p class="body">
+      Our new site is being stitched together right now.<br />
+      In the meantime, we'd love to hear from you.
+    </p>
+    <a class="cta" href="mailto:hello@yarnside.com.au">Get in touch</a>
+    <footer>&copy; 2026 Yarnside</footer>
+  </main>
+</body>
+</html>
