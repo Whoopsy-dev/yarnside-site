@@ -29,7 +29,11 @@ if (files.length === 0) {
 let total = 0;
 for (const file of files) {
   const { name } = parse(file);
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const slug = name
+    .toLowerCase()
+    .replace(/-?\d+x\d+/g, "")            // strip dimension tokens like "1200x1600"
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
   const outPath = join(OUT, `${slug}.webp`);
 
   const info = await sharp(join(SRC, file))
