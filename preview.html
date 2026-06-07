@@ -8,14 +8,16 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet" />
 
   <style>
     :root {
-      /* Brand palette — soft sage-aqua, ocean/outdoors */
-      --bg: #c7d8cb;
+      /* Brand palette — fresher sea-glass + warm accents */
+      --bg: #cfe0d4;
       --ink: #3b362e;
       --muted: rgba(59, 54, 46, 0.62);
+      --read: rgba(59, 54, 46, 0.82);
+      --brand-red: #9f2d27;
       --terracotta: #c07a4e;
       --terracotta-dark: #a8663d;
       /* Per-card fan step — overridden on smaller screens */
@@ -33,10 +35,20 @@
       font-family: "Nunito Sans", system-ui, sans-serif;
       color: var(--ink);
       background:
-        radial-gradient(circle at 28% 18%, #d6e3d8 0%, transparent 60%),
-        radial-gradient(circle at 80% 85%, #bcd0c2 0%, transparent 55%),
+        radial-gradient(120% 110% at 30% 12%, #dceadf 0%, transparent 55%),
         var(--bg);
       -webkit-font-smoothing: antialiased;
+    }
+
+    /* Subtle linen-like grain — kills gradient banding + adds handmade tactility */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.05;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
 
     /*--------------------  Carousel  --------------------*/
@@ -74,38 +86,37 @@
       cursor: pointer;
     }
 
-    .carousel-box {
-      position: absolute;
-      inset: 0;
-      opacity: var(--box-opacity, 1);
-    }
+    .carousel-box { position: absolute; inset: 0; opacity: var(--box-opacity, 1); }
+    .carousel-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 
-    .carousel-item img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      pointer-events: none;
-    }
-
-    /*--------------------  Chrome / UI  --------------------*/
+    /*--------------------  Brand wordmark (writes on load)  --------------------*/
     .brand {
       position: fixed;
-      z-index: 5;
-      top: 30px;
-      left: 36px;
-      font-family: "Fraunces", Georgia, serif;
-      font-size: 24px;
-      letter-spacing: 0.5px;
+      z-index: 6;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: "Dancing Script", cursive;
+      font-weight: 700;
+      color: var(--brand-red);
+      font-size: clamp(46px, 8vw, 96px);
+      line-height: 1;
+      white-space: nowrap;
       pointer-events: none;
+      animation: write 2s var(--ease) 0.25s both;
+    }
+    @keyframes write {
+      from { clip-path: inset(0 100% -18% 0); }
+      to   { clip-path: inset(0 -6% -18% 0); }
     }
 
-    /* Per-product copy, top-right, cross-fades between products */
+    /*--------------------  Per-product copy (mid-right, cross-fades)  --------------------*/
     .copy {
       position: fixed;
       z-index: 5;
-      top: 72px;
-      right: 36px;
-      max-width: 300px;
+      top: 34vh;
+      right: clamp(28px, 6vw, 92px);
+      max-width: 370px;
       text-align: right;
       opacity: 1;
       transition: opacity .35s var(--ease);
@@ -113,51 +124,47 @@
     }
     .copy.is-out { opacity: 0; }
     .copy-kicker {
-      font-size: 10px;
-      letter-spacing: 0.24em;
+      font-size: 11px;
+      letter-spacing: 0.26em;
       text-transform: uppercase;
       color: var(--terracotta-dark);
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     .copy-title {
       font-family: "Fraunces", Georgia, serif;
       font-weight: 600;
-      font-size: clamp(22px, 3vw, 31px);
-      line-height: 1.05;
+      font-size: clamp(30px, 4vw, 46px);
+      line-height: 1.04;
     }
     .copy-desc {
-      margin-top: 12px;
-      font-size: 14px;
+      margin: 16px 0 0 auto;
+      max-width: 340px;
+      font-size: clamp(15px, 1.35vw, 18px);
       line-height: 1.6;
-      color: var(--muted);
+      color: var(--read);
     }
 
-    /* Vertical tagline, bottom-right */
-    .vbar {
-      position: fixed;
-      z-index: 5;
-      right: 30px;
-      bottom: 26px;
-      transform-origin: 100% 100%;
-      transform: rotate(-90deg);
-      font-size: 10px;
-      letter-spacing: 0.28em;
-      text-transform: uppercase;
-      color: var(--muted);
-      white-space: nowrap;
-      pointer-events: none;
-    }
-
-    /* Get in touch + Instagram, bottom-left */
-    .actions {
+    /*--------------------  Contact block (bottom-left)  --------------------*/
+    .contact {
       position: fixed;
       z-index: 6;
-      left: 36px;
-      bottom: 26px;
-      display: flex;
-      align-items: center;
-      gap: 18px;
+      left: clamp(22px, 4vw, 42px);
+      bottom: clamp(22px, 4vw, 36px);
+      max-width: 300px;
     }
+    .contact-eyebrow {
+      font-family: "Fraunces", Georgia, serif;
+      font-weight: 600;
+      font-size: clamp(19px, 2.2vw, 26px);
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+    .contact-sub {
+      font-size: 13.5px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .actions { display: flex; align-items: center; gap: 18px; }
     .cta {
       display: inline-block;
       padding: 0.72rem 1.5rem;
@@ -170,20 +177,14 @@
       transition: transform .25s var(--ease), background .25s var(--ease);
     }
     .cta:hover { background: var(--terracotta-dark); transform: translateY(-2px); }
-    .ig {
-      width: 26px; height: 26px;
-      color: var(--ink);
-      opacity: .6;
-      transition: opacity .25s var(--ease);
-    }
+    .ig { width: 26px; height: 26px; color: var(--ink); opacity: .6; transition: opacity .25s var(--ease); }
     .ig:hover { opacity: 1; }
 
     .hint {
       position: fixed;
       z-index: 5;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
+      right: clamp(22px, 4vw, 40px);
+      bottom: clamp(22px, 4vw, 34px);
       font-size: 10px;
       letter-spacing: 0.22em;
       text-transform: uppercase;
@@ -191,19 +192,25 @@
       pointer-events: none;
     }
 
-    /*--------------------  Responsive fan  --------------------*/
+    /*--------------------  Responsive  --------------------*/
     @media (max-width: 900px) {
       :root { --step-x: 62%; --step-y: 19%; --step-rot: 10deg; }
-      .copy { max-width: 230px; }
+      .copy { max-width: 280px; top: 30vh; }
     }
     @media (max-width: 600px) {
       :root { --step-x: 46%; --step-y: 16.5%; --step-rot: 7.8deg; }
       .carousel-item { --width: clamp(160px, 52vw, 240px); --height: clamp(220px, 72vw, 330px); }
-      .vbar, .hint { display: none; }
-      .brand { top: 22px; left: 22px; font-size: 21px; }
-      .copy { top: 56px; right: 22px; max-width: 56vw; }
-      .copy-desc { font-size: 12.5px; }
-      .actions { left: 50%; transform: translateX(-50%); bottom: 22px; }
+      .hint { display: none; }
+      .brand { top: 14px; font-size: clamp(40px, 13vw, 60px); }
+      .copy { top: 13vh; right: 20px; max-width: 60vw; }
+      .copy-title { font-size: clamp(24px, 7vw, 32px); }
+      .copy-desc { font-size: 13px; }
+      .contact { left: 50%; transform: translateX(-50%); bottom: 20px; text-align: center; max-width: 88vw; }
+      .actions { justify-content: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .brand { animation: none; clip-path: none; }
     }
   </style>
 </head>
@@ -218,24 +225,25 @@
     <p class="copy-desc" id="copyDesc"></p>
   </div>
 
-  <div class="vbar">Handmade crochet · made with care</div>
-
-  <div class="actions">
-    <a class="cta" href="mailto:hello@yarnside.com.au">Get in touch</a>
-    <a class="ig" href="#" aria-label="Instagram" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-        <rect x="3" y="3" width="18" height="18" rx="5"/>
-        <circle cx="12" cy="12" r="4"/>
-        <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/>
-      </svg>
-    </a>
+  <div class="contact">
+    <div class="contact-eyebrow">Want to know more?</div>
+    <div class="contact-sub">Every piece is hand-made to order.</div>
+    <div class="actions">
+      <a class="cta" href="mailto:hello@yarnside.com.au">Get in touch</a>
+      <a class="ig" href="#" aria-label="Instagram" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="3" y="3" width="18" height="18" rx="5"/>
+          <circle cx="12" cy="12" r="4"/>
+          <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/>
+        </svg>
+      </a>
+    </div>
   </div>
 
   <div class="hint">Scroll / drag to explore</div>
 
   <script>
     /*--------------------  Data  --------------------*/
-    // Grouped by product, in file order. Copy is per-product (starter text — tweak away).
     const PRODUCTS = [
       {
         slug: "bucket", kicker: "Headwear", title: "Bucket Hat", start: 1, count: 10,
@@ -258,16 +266,13 @@
     const pad3 = (n) => String(n).padStart(3, "0");
 
     const carousel = document.getElementById("carousel");
-    const cardProduct = []; // card index -> product
+    const cardProduct = [];
     PRODUCTS.forEach((p) => {
       for (let i = 0; i < p.count; i++) {
         const file = `assets/images/${pad3(p.start + i)}-${p.slug}.webp`;
         const el = document.createElement("div");
         el.className = "carousel-item";
-        el.innerHTML = `
-          <div class="carousel-box">
-            <img src="${file}" alt="${p.title}" loading="lazy" decoding="async" draggable="false" />
-          </div>`;
+        el.innerHTML = `<div class="carousel-box"><img src="${file}" alt="${p.title}" loading="lazy" decoding="async" draggable="false" /></div>`;
         carousel.appendChild(el);
         cardProduct.push(p);
       }
@@ -281,35 +286,22 @@
 
     let activeProduct = null;
     let copyTimer = null;
-
-    const paintCopy = (p) => {
-      copyKicker.textContent = p.kicker;
-      copyTitle.textContent = p.title;
-      copyDesc.textContent = p.desc;
-    };
-
+    const paintCopy = (p) => { copyKicker.textContent = p.kicker; copyTitle.textContent = p.title; copyDesc.textContent = p.desc; };
     const setCopy = (p) => {
       if (!p || p.slug === activeProduct) return;
       const first = activeProduct === null;
       activeProduct = p.slug;
-      if (first) { paintCopy(p); return; }   // no fade on first paint
+      if (first) { paintCopy(p); return; }
       copyEl.classList.add("is-out");
       clearTimeout(copyTimer);
-      copyTimer = setTimeout(() => {
-        paintCopy(p);
-        copyEl.classList.remove("is-out");
-      }, 350);
+      copyTimer = setTimeout(() => { paintCopy(p); copyEl.classList.remove("is-out"); }, 350);
     };
 
     /*--------------------  State  --------------------*/
     const items = [...document.querySelectorAll(".carousel-item")];
     const N = items.length;
 
-    let progress = 50;        // rendered (eased) value
-    let target = 50;          // input target
-    let startX = 0;
-    let isDown = false;
-    let dragDist = 0;
+    let progress = 50, target = 50, startX = 0, isDown = false, dragDist = 0;
 
     const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const EASE = reduceMotion ? 1 : 0.085;
@@ -319,17 +311,13 @@
     const clamp = (v, a, b) => Math.max(a, Math.min(v, b));
     const lerp = (a, b, n) => a + (b - a) * n;
 
-    // initial copy
     setCopy(cardProduct[Math.round((progress / 100) * (N - 1))]);
 
-    /*--------------------  Render loop  --------------------*/
     function render() {
       target = clamp(target, 0, 100);
       progress = lerp(progress, target, EASE);
-
-      const active = (progress / 100) * (N - 1);   // FLOAT → continuous motion
+      const active = (progress / 100) * (N - 1);
       const front = clamp(Math.round(active), 0, N - 1);
-
       items.forEach((item, index) => {
         const offset = index - active;
         const dist = Math.abs(offset);
@@ -337,7 +325,6 @@
         item.style.setProperty("--zIndex", N - Math.abs(index - front));
         item.style.setProperty("--box-opacity", clamp(1 - dist / 4, 0, 1));
       });
-
       setCopy(cardProduct[front]);
       requestAnimationFrame(render);
     }
@@ -345,7 +332,6 @@
 
     /*--------------------  Input → target only  --------------------*/
     addEventListener("wheel", (e) => { target += e.deltaY * SPEED_WHEEL; }, { passive: true });
-
     const pointerDown = (e) => { isDown = true; dragDist = 0; startX = e.clientX ?? e.touches?.[0]?.clientX ?? 0; };
     const pointerUp = () => { isDown = false; };
     const pointerMove = (e) => {
@@ -356,7 +342,6 @@
       target += dx * SPEED_DRAG;
       startX = x;
     };
-
     addEventListener("mousedown", pointerDown);
     addEventListener("mousemove", pointerMove);
     addEventListener("mouseup", pointerUp);
@@ -364,13 +349,11 @@
     addEventListener("touchmove", pointerMove, { passive: true });
     addEventListener("touchend", pointerUp);
 
-    // click a card to bring it to centre (ignored if the press was a drag)
     items.forEach((item, i) => item.addEventListener("click", () => {
       if (dragDist > 8) return;
       target = (i / (N - 1)) * 100;
     }));
 
-    // keyboard
     addEventListener("keydown", (e) => {
       const step = 100 / (N - 1);
       if (e.key === "ArrowRight" || e.key === "ArrowDown") target += step;
