@@ -257,6 +257,24 @@
     @media (prefers-reduced-motion: reduce) { .cascade { display: none; } }
 
     /*--------------------  Responsive  --------------------*/
+    /* LAPTOP / small-desktop: big screens have room for the full fan to sit
+       between the edge-pinned text; laptops don't, so the cards slide under
+       .copy (right) and .intro (bottom-left). Tighten the spread, trim the
+       cards, and tuck the side copy toward the edges to reopen the gutters. */
+    @media (min-width: 901px) and (max-width: 1600px) {
+      :root { --step-x: 58%; --step-y: 19%; --step-rot: 11deg; }
+      .carousel-item {
+        --width: clamp(170px, 22vw, 240px);
+        --height: clamp(230px, 31vw, 330px);
+      }
+      .copy {
+        max-width: clamp(260px, 26vw, 340px);
+        right: clamp(20px, 3vw, 48px);
+        top: 28%;
+      }
+      .intro { max-width: clamp(280px, 30vw, 360px); }
+    }
+
     @media (max-width: 900px) {
       :root { --step-x: 62%; --step-y: 19%; --step-rot: 10deg; }
       .copy { max-width: 280px; top: 27%; }
