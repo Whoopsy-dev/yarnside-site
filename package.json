@@ -1,0 +1,11 @@
+{
+  "name": "yarnside-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "images": "node scripts/convert-images.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.33.5"
+  }
+}

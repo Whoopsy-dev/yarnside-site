@@ -10,3 +10,10 @@ desktop.ini
 .env.*
 *.key
 *.pem
+
+# Node
+node_modules/
+
+# Full-res source photos — keep locally, never commit (they bloat git history)
+originals/*
+!originals/README.md
