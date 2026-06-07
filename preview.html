@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
   <title>Yarnside — Showcase (preview)</title>
   <meta name="robots" content="noindex" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -113,7 +116,8 @@
     .copy {
       position: fixed;
       z-index: 5;
-      top: 16vh;
+      top: 30%;
+      transform: translateY(-50%);
       right: clamp(28px, 6vw, 92px);
       max-width: 370px;
       text-align: right;
@@ -215,14 +219,14 @@
     /*--------------------  Responsive  --------------------*/
     @media (max-width: 900px) {
       :root { --step-x: 62%; --step-y: 19%; --step-rot: 10deg; }
-      .copy { max-width: 280px; top: 30vh; }
+      .copy { max-width: 280px; top: 27%; }
     }
     @media (max-width: 600px) {
       :root { --step-x: 46%; --step-y: 16.5%; --step-rot: 7.8deg; }
       .carousel-item { --width: clamp(160px, 52vw, 240px); --height: clamp(220px, 72vw, 330px); }
       .hint { display: none; }
       .brand { top: 14px; width: clamp(180px, 62vw, 300px); }
-      .copy { top: 13vh; right: 20px; max-width: 60vw; }
+      .copy { top: 12vh; right: 20px; max-width: 60vw; transform: none; }
       .copy-title { font-size: clamp(24px, 7vw, 32px); }
       .copy-desc { font-size: 13px; }
       .intro { left: 50%; transform: translateX(-50%); bottom: 76px; text-align: center; max-width: 90vw; }
